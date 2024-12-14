@@ -82,13 +82,11 @@ const streamVideo = (req, res) => {
           "host"
         )}/api/video/stream/segments/`;
 
-        console.log("Base URL:", baseUrl);
         // แก้ไขการแทนที่ใน playlist ให้ไม่เกิด / ซ้ำ
         const modifiedPlaylist = data.replace(
           /([a-zA-Z0-9-_]+\.ts)/g,
           (match) => `${baseUrl}${match}`
         );
-        console.log("Modified playlist:", modifiedPlaylist);
         res.setHeader("Content-Type", "application/vnd.apple.mpegurl");
         res.send(modifiedPlaylist);
       });
