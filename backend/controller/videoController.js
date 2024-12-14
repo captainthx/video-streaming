@@ -98,7 +98,6 @@ const streamVideo = (req, res) => {
 
 const streamSegment = (req, res) => {
   const segmentName = req.params.segmentName;
-  console.log("Segment name:", segmentName);
   // ปรับเส้นทางให้ตรงกับโฟลเดอร์ uploads
   const segmentPath = path.join(
     __dirname,

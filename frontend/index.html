@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Video Streaming Platform</title>
+    <style>
+        body {
+          font-family: Arial, sans-serif;
+          background-color: #f4f4f9;
+          margin: 0;
+          padding: 0;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          height: 100vh;
+          flex-direction: column;
+        }
+    
+        h1 {
+          color: #2c3e50;
+          font-size: 2rem;
+          margin-bottom: 20px;
+        }
+    
+        section {
+          width: 100%;
+          max-width: 600px;
+          background-color: #fff;
+          padding: 20px;
+          border-radius: 8px;
+          box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+          margin-bottom: 20px;
+        }
+    
+        h2 {
+          color: #34495e;
+          font-size: 1.5rem;
+          margin-bottom: 10px;
+          text-align: center;
+        }
+    
+        input[type="text"],
+        input[type="password"],
+        input[type="file"] {
+      width: 94%;
+      padding: 10px;
+      margin: 10px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      font-size: 1rem;
+    }
+    
+        button {
+          width: 100%;
+          padding: 10px;
+          background-color: #3498db;
+          color: white;
+          border: none;
+          border-radius: 4px;
+          font-size: 1.1rem;
+          cursor: pointer;
+          transition: background-color 0.3s;
+        }
+    
+        button:hover {
+          background-color: #2980b9;
+        }
+    
+        p {
+          color: #e74c3c;
+          font-size: 1rem;
+          text-align: center;
+        }
+    
+        #player-section video {
+          width: 100%;
+          max-width: 100%;
+          height: auto;
+          border-radius: 8px;
+          box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+    
+        /* เพิ่มสไตล์สำหรับข้อความ error */
+        #uploadMessage {
+          color: #3ce767;
+          text-align: center;
+          margin-top: 10px;
+        }
+       
+        #errorMessage {
+          color: #e74c3c;
+          text-align: center;
+          margin-top: 10px;
+        }
+      </style>
+</head>
+<body>
+    <h1>Video Streaming Platform</h1>
+
+    <!-- ส่วน Login/Register -->
+    <section id="auth-section">
+        <h2>Login</h2>
+        <input type="text" id="username" placeholder="Username" />
+        <input type="password" id="password" placeholder="Password" />
+        <button id="loginButton">Login</button>
+        <p id="errorMessage"></p>
+    </section>
+
+    <!-- ส่วนอัปโหลดวิดีโอ -->
+    <section id="upload-section" style="display: none;">
+        <h2>Upload Video</h2>
+        <input type="file" id="videoFile" />
+        <button id="uploadButton">Upload</button>
+        <p id="uploadMessage"></p>
+        <p id="errorMessage"></p>
+    </section>
+    <hr>
+
+    <!-- ส่วนเล่นวิดีโอ -->
+    <section id="player-section" style="display: none;">
+        <h2>Video Player</h2>
+        <input type="text" id="videoId" placeholder="Enter Video ID" />
+        <button id="playButton">Play</button>
+        <br><br>
+        <video id="videoPlayer" controls style="width: 100%;">
+            <source id="videoSource" type="application/x-mpegURL" />
+            Your browser does not support HLS streaming.
+        </video>
+    </section>
+
+    <script>
+        let isAuthenticated = false;
+
+        // ฟังก์ชันสำหรับ Login
+        async function login() {
+            const username = document.getElementById('username').value.trim();
+            const password = document.getElementById('password').value.trim();
+            const errorMessage = document.getElementById('errorMessage');
+
+            if (!username || !password) {
+                errorMessage.textContent = 'Please enter username and password.';
+                return;
+            }
+
+            // ส่งข้อมูลไปที่ API Login
+            try {
+                const response = await fetch('http://localhost:3000/api/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password })
+                });
+
+                const data = await response.json();
+                if (response.ok) {
+                    isAuthenticated = true;
+                    errorMessage.textContent = 'Login successful!';
+                    showVideoSections();
+                    localStorage.setItem('token', data.access_token);
+                } else {
+                    errorMessage.textContent = 'Login failed: ' + data.error;
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                errorMessage.textContent = 'Error connecting to server.';
+            }
+        }
+
+        // ฟังก์ชันแสดงส่วนอัปโหลดและเล่นวิดีโอหลังล็อกอิน
+        function showVideoSections() {
+            document.getElementById('auth-section').style.display = 'none';
+            document.getElementById('upload-section').style.display = 'block';
+            document.getElementById('player-section').style.display = 'block';
+        }
+
+        // ฟังก์ชันสำหรับอัปโหลดวิดีโอ
+        async function uploadVideo() {
+            if (!isAuthenticated) {
+                alert('Please login first!');
+                return;
+            }
+            const videoFileInput = document.getElementById('videoFile');
+            const uploadMessage = document.getElementById('uploadMessage');
+            const errorMessage = document.getElementById('errorMessage');
+            const file = videoFileInput.files[0];
+
+            if (!file) {
+                uploadMessage.textContent = 'Please select a video file.';
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('video', file);
+
+            try {
+                const response = await fetch('http://localhost:3000/api/video/upload', {
+                    headers: { Authorization: 'Bearer ' + localStorage.getItem('token') },
+                    method: 'POST',
+                    body: formData,
+                });
+                const data = await response.json();
+
+                if (response.ok) {
+                    uploadMessage.textContent = 'Upload successful!';
+                    videoFileInput.value = '';
+                } else {
+                    errorMessage.textContent = `Error: ${data.error}`;
+                }
+            } catch (error) {
+                console.error('Error uploading video:', error);
+                errorMessage.textContent = 'Error uploading video.';
+            }
+        }
+
+        // ฟังก์ชันสำหรับเล่นวิดีโอ
+        function playVideo() {
+            if (!isAuthenticated) {
+                alert('Please login first!');
+                return;
+            }
+
+            const videoIdInput = document.getElementById('videoId');
+            const videoPlayer = document.getElementById('videoPlayer');
+            const videoSource = document.getElementById('videoSource');
+            const videoId = videoIdInput.value.trim();
+
+            if (!videoId) {
+                alert('Please enter a Video ID.');
+                return;
+            }
+
+            const videoUrl = `http://localhost:3000/api/video/stream/${videoId}`;
+            if (Hls.isSupported()) {
+                const hls = new Hls();
+                hls.loadSource(videoUrl);
+                hls.attachMedia(videoPlayer);
+                hls.on(Hls.Events.MANIFEST_PARSED, () => {
+                    videoPlayer.play();
+                });
+            } else if (videoPlayer.canPlayType('application/vnd.apple.mpegurl')) {
+                videoSource.src = videoUrl;
+                videoPlayer.load();
+            } else {
+                alert('Your browser does not support HLS streaming.');
+            }
+        }
+
+        // โหลด HLS.js สำหรับเล่นไฟล์ .m3u8
+        const script = document.createElement('script');
+        script.src = 'https://cdn.jsdelivr.net/npm/hls.js@latest';
+        script.onload = () => console.log('HLS.js loaded successfully!');
+        document.head.appendChild(script);
+
+        // ผูก Event กับปุ่มต่าง ๆ
+        document.getElementById('loginButton').addEventListener('click', login);
+        document.getElementById('uploadButton').addEventListener('click', uploadVideo);
+        document.getElementById('playButton').addEventListener('click', playVideo);
+    </script>
+</body>
+</html>
