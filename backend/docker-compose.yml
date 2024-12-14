@@ -1,0 +1,30 @@
+services:
+  mysql:
+    image: mysql:5.7
+    container_name: mysql_video_streaming
+    environment:
+      MYSQL_ROOT_PASSWORD: 1234
+      MYSQL_DATABASE: video_streaming
+    ports:
+      - "3311:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+
+  # backend:
+  #   build: .
+  #   container_name: video_streaming_backend
+  #   environment:
+  #     DB_HOST: mysql
+  #     DB_USER: user
+  #     DB_PASSWORD: userpassword
+  #     DB_NAME: video_streaming
+  #     NODE_ENV: production
+  #   ports:
+  #     - "3000:3000"
+  #   depends_on:
+  #     - mysql
+  #   volumes:
+  #     - ./uploads:/app/uploads
+
+volumes:
+  mysql_data:

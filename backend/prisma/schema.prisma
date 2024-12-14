@@ -1,0 +1,28 @@
+datasource db {
+    provider = "mysql"
+    url      = env("DATABASE_URL") // ใช้ค่าใน .env เพื่อเชื่อมต่อกับ MySQL
+}
+
+generator client {
+    provider = "prisma-client-js"
+}
+
+model User {
+    id        Int      @id @default(autoincrement())
+    username  String   @unique
+    email     String   @unique
+    password  String
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+    Video     Video[]
+}
+
+model Video {
+    id        Int      @id @default(autoincrement())
+    title     String
+    url       String
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+    userId    Int
+    user      User     @relation(fields: [userId], references: [id])
+}
