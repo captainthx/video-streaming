@@ -76,11 +76,12 @@ const login = async (req, res) => {
 
 // ฟังก์ชันสำหรับการตรวจสอบ JWT (Authentication Middleware)
 const authenticate = (req, res, next) => {
-  const token = req.header("Authorization");
-  if (!token) {
+  const headerToken = req.header("Authorization");
+  if (!headerToken) {
     return res.status(401).json({ message: "No token, authorization denied" });
   }
 
+  const token = headerToken.split(" ")[1];
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     req.user = decoded;
