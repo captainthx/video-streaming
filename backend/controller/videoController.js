@@ -112,4 +112,35 @@ const streamSegment = (req, res) => {
   });
 };
 
-module.exports = { uploadVideo, streamVideo, streamSegment };
+const streamList = async (req, res) => {
+  try {
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const offset = (page - 1) * limit;
+
+    const videoList = await prisma.video.findMany({
+      skip: offset,
+      take: limit,
+    });
+
+    const totalVideos = await prisma.video.count();
+
+    const response = {
+      total: totalVideos,
+      page: page,
+      limit: limit,
+      videos: videoList.map((video) => ({
+        id: video.id,
+        title: video.title,
+        url: video.url,
+        hls_url: video.hls_url,
+      })),
+    };
+
+    res.status(200).json(response);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+module.exports = { uploadVideo, streamVideo, streamSegment, streamList };

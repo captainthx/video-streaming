@@ -5,6 +5,7 @@ const {
   uploadVideo,
   streamVideo,
   streamSegment,
+  streamList,
 } = require("../controller/videoController");
 const { authenticate } = require("../controller/authController");
 
@@ -26,5 +27,7 @@ router.get("/stream/:videoId", streamVideo);
 
 // เสิร์ฟไฟล์ .ts Segment
 router.get("/stream/segments/:segmentName", streamSegment);
+
+router.get("/stream-list", streamList);
 
 module.exports = router;
